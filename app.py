@@ -2,7 +2,7 @@ from flask import Flask, render_template,request
 from pymongo import MongoClient
 from bson import ObjectId  # Import ObjectId to use it for querying
 from flask_paginate import Pagination, get_page_parameter
-
+import os
 
 
 app = Flask(__name__)
@@ -105,4 +105,5 @@ def item_details(item_id):
     
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)

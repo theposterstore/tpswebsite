@@ -59,7 +59,7 @@ def explore():
 
     # Get the current page and set the number of items per page
     page = request.args.get(get_page_parameter(), type=int, default=1)
-    per_page = 8  # Number of items per page
+    per_page = 16  # Number of items per page
     offset = (page - 1) * per_page
 
     # Fetch all items based on the search and category filter, with pagination and sorting

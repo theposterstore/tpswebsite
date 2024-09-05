@@ -2,7 +2,7 @@ from flask import Flask, render_template,request
 from pymongo import MongoClient
 from bson import ObjectId  # Import ObjectId to use it for querying
 from flask_paginate import Pagination, get_page_parameter
-import os
+
 
 
 app = Flask(__name__)
@@ -14,20 +14,44 @@ db = client["TPS"]
 @app.route('/home')
 def home():
     # Fetch the last 4 items from the collection
-    items_cursor = db['inventory'].find({}, {"_id": 0})  # Fetch all fields
-    items_list = list(items_cursor.sort([('_id', -1)]).limit(4))  # Sort by _id in descending order and limit to 4
+    items_cursor = db['inventory'].find({}, {"_id": 0}).sort([('_id', -1)]).limit(10)
+    items_list = list(items_cursor)
     
-    # Pass the last 4 items to the template
-    return render_template('index.html', items=items_list)
+    # Fetch the first record for each distinct collection_name
+    first_record_per_collection = db['inventory'].aggregate([
+        {"$sort": {"_id": 1}},  # Sort by _id in ascending order to get the first document
+        {"$group": {
+            "_id": "$collection_name",  # Group by collection_name
+            "first_item": {"$first": "$$ROOT"}  # Get the first document in each group
+        }},
+        {"$replaceRoot": {"newRoot": "$first_item"}}  # Replace root with the first document
+    ])
+    first_records_list = list(first_record_per_collection)
+    print(first_records_list)
+    # Pass both the last 4 items and the first record per collection to the template
+    return render_template('index.html', items=items_list, first_records=first_records_list)
+
 
 @app.route('/')
 def index():
     # Fetch the last 4 items from the collection
-    items_cursor = db['inventory'].find({}, {"_id": 0})  # Fetch all fields
-    items_list = list(items_cursor.sort([('_id', -1)]).limit(4))  # Sort by _id in descending order and limit to 4
+    items_cursor = db['inventory'].find({}, {"_id": 0}).sort([('_id', -1)]).limit(10)
+    items_list = list(items_cursor)
     
-    # Pass the last 4 items to the template
-    return render_template('index.html', items=items_list)
+    # Fetch the first record for each distinct collection_name
+    first_record_per_collection = db['inventory'].aggregate([
+        {"$sort": {"_id": 1}},  # Sort by _id in ascending order to get the first document
+        {"$group": {
+            "_id": "$collection_name",  # Group by collection_name
+            "first_item": {"$first": "$$ROOT"}  # Get the first document in each group
+        }},
+        {"$replaceRoot": {"newRoot": "$first_item"}}  # Replace root with the first document
+    ])
+    first_records_list = list(first_record_per_collection)
+    print(first_records_list)
+    # Pass both the last 4 items and the first record per collection to the template
+    return render_template('index.html', items=items_list, first_records=first_records_list)
+
 
 @app.route('/explore', methods=['GET'])
 def explore():
